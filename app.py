@@ -1,55 +1,65 @@
 from flask import Flask, jsonify, request
+import graphene
+from graphene import ObjectType, String, Int, List, Field
 
 app = Flask(__name__)
 
+# Your existing books list
 books = []
 
-# helper function to generate IDs
+# Helper function to generate IDs
 def generate_id():
     return len(books) + 1
 
-# endpoint to get all books
-@app.route('/reading-list/books', methods=['GET'])
-def get_books():
-    return jsonify({'books': books})
+# Define GraphQL schema
+class KeyValue(ObjectType):
+    name = String(description="Name of the item", required=True)
+    author = String(description="Author of the item", required=True)
+    status = String(description="Status of the item", required=True)
 
-# endpoint to add a new book
-@app.route('/reading-list/books', methods=['POST'])
-def add_book():
+class Query(ObjectType):
+    all_books = List(KeyValue)
+
+    def resolve_all_books(self, info):
+        return books
+
+    book_by_id = Field(KeyValue, book_id=Int(required=True))
+
+    def resolve_book_by_id(self, info, book_id):
+        for book in books:
+            if book['id'] == book_id:
+                return book
+        return None
+
+class CreateBook(graphene.Mutation):
+    class Arguments:
+        name = String(required=True)
+        author = String(required=True)
+        status = String(required=True)
+
+    book = Field(KeyValue)
+
+    def mutate(self, info, name, author, status):
+        book = {
+            'id': generate_id(),
+            'name': name,
+            'author': author,
+            'status': status
+        }
+        books.append(book)
+        return CreateBook(book=book)
+
+class Mutation(ObjectType):
+    create_book = CreateBook.Field()
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
+
+# GraphQL endpoint
+@app.route('/graphql', methods=['POST'])
+def graphql_endpoint():
     data = request.get_json()
-    book = {
-        'id': generate_id(),
-        'author': data['author'],
-        'name': data['name'],
-        'status': data['status']
-    }
-    books.append(book)
-    return jsonify(book)
-
-# endpoint to get a book by ID
-@app.route('/reading-list/books/<int:book_id>', methods=['GET'])
-def get_book(book_id):
-    for book in books:
-        if book['id'] == book_id:
-            return jsonify(book)
-    return '', 404
-
-# endpoint to delete a book by ID
-@app.route('/reading-list/books/<int:book_id>', methods=['DELETE'])
-def delete_book(book_id):
-    global books
-    books = [book for book in books if book['id'] != book_id]
-    return '', 204
-
-# endpoint to update a book status by ID
-@app.route('/reading-list/books/<int:book_id>', methods=['PUT'])
-def update_book_status(book_id):
-    data = request.get_json()
-    for book in books:
-        if book['id'] == book_id:
-            book['status'] = data['status']
-            return jsonify(book)
-    return '', 404
+    result = schema.execute(data.get('query'))
+    return jsonify(result.data)
 
 if __name__ == '__main__':
     app.run()
