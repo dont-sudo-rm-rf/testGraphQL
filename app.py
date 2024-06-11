@@ -91,7 +91,7 @@ app.add_url_rule(
 
 
 # GraphQL endpoint
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/graphql', methods=['GET', 'POST'])
 def graphql_endpoint():
     if request.method == 'GET':
         # Handle GET request to fetch schema
