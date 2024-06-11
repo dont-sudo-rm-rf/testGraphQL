@@ -55,30 +55,28 @@ class Query(graphene.ObjectType):
                 return book
         return None
 
-# class CreateBook(graphene.Mutation):
-#     class Arguments:
-#         name = graphene.String(required=True)
-#         author = graphene.String(required=True)
-#         status = graphene.String(required=True)
+class CreateBook(graphene.Mutation):
+    class Arguments:
+        name = graphene.String(required=True)
+        author = graphene.String(required=True)
+        status = graphene.String(required=True)
 
-#     book = graphene.Field(Book)
+    book = graphene.Field(Book)
 
-#     def mutate(self, info, name, author, status):
-#         book = {
-#             'id': generate_id(),
-#             'name': name,
-#             'author': author,
-#             'status': status
-#         }
-#         books.append(book)
-#         return CreateBook(book=book)
+    def mutate(self, info, name, author, status):
+        new_book = {
+            'id': generate_id(),
+            'name': name,
+            'author': author,
+            'status': status
+        }
+        books.append(new_book)
+        return CreateBook(book=new_book)
 
-# class Mutation(graphene.ObjectType):
-#     create_book = CreateBook.Field()
+class Mutation(graphene.ObjectType):
+    create_book = CreateBook.Field()
 
-# schema = graphene.Schema(query=Query, mutation=Mutation)
-
-schema = graphene.Schema(query=Query)
+schema = graphene.Schema(query=Query, mutation=Mutation)
 
 app.add_url_rule(
     '/graphql',
