@@ -91,7 +91,7 @@ app.add_url_rule(
 
 
 # GraphQL endpoint
-@app.route('/graphqlone', methods=['POST,GET'])
+@app.route('/', methods=['POST,GET'])
 def graphql_endpoint():
     data = request.get_json()
     result = schema.execute(data.get('query'))
