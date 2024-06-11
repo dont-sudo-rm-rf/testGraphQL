@@ -1,4 +1,4 @@
 Flask==3.0.3
 gunicorn>=20.0.4
 graphene==3.3
-graphql_server>=2.5
+graphql-server==3.0.0b7
