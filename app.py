@@ -91,11 +91,17 @@ app.add_url_rule(
 
 
 # GraphQL endpoint
-@app.route('/', methods=['POST,GET'])
+@app.route('/', methods=['GET', 'POST'])
 def graphql_endpoint():
-    data = request.get_json()
-    result = schema.execute(data.get('query'))
-    return jsonify(result.data)
+    if request.method == 'GET':
+        # Handle GET request to fetch schema
+        return jsonify({'schema': schema.to_dict()})
+    elif request.method == 'POST':
+        # Handle POST request for executing GraphQL queries
+        data = request.get_json()
+        result = schema.execute(data.get('query'))
+        return jsonify(result.data)
+
 
 if __name__ == '__main__':
     app.run()
